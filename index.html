@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -84,38 +85,65 @@ h1 {
     margin-bottom: 2rem;
 }
 
-/* AI Upload Section */
-.upload-area {
-    border: 2px dashed var(--border-color);
+/* AI Section */
+.media-container {
+    position: relative;
+    width: 100%;
     border-radius: 1.5rem;
-    padding: 2rem;
+    overflow: hidden;
+    background: rgba(0,0,0,0.05);
     margin-bottom: 1.5rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-.upload-area:hover {
-    background: rgba(99, 102, 241, 0.05);
-    border-color: #6366f1;
+#webcam-container canvas {
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 1.5rem;
 }
 
 #imagePreview {
     width: 100%;
-    max-height: 300px;
+    max-height: 400px;
     object-fit: contain;
-    border-radius: 1rem;
     display: none;
-    margin-bottom: 1rem;
 }
 
-.loading {
-    display: none;
-    margin: 1rem 0;
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    justify-content: center;
+}
+
+.action-btn {
+    padding: 0.8rem 1.2rem;
+    border-radius: 1rem;
+    border: none;
+    background: var(--btn-bg);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.action-btn.secondary {
+    background: var(--text-color);
+    color: var(--bg-color);
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
 }
 
 .result-area {
     margin-top: 2rem;
-    display: none;
 }
 
 .prediction-bar {
@@ -142,7 +170,7 @@ h1 {
     height: 100%;
     background: var(--btn-bg);
     width: 0%;
-    transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: width 0.3s ease;
 }
 
 .description-box {
@@ -183,24 +211,28 @@ h1 {
 <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌓</div>
 
 <div class="container">
-    <h1>🧬 AI 체형 분석기</h1>
-    <p class="subtitle">전신 사진을 올려 당신의 체형을 확인해보세요</p>
+    <h1>🧬 AI 실시간 체형 분석</h1>
+    <p class="subtitle">카메라를 켜거나 사진을 올려 체형을 진단해보세요</p>
     
-    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+    <div class="media-container">
+        <div id="webcam-container"></div>
         <img id="imagePreview" src="" alt="Preview">
-        <div id="uploadPlaceholder">
+        <div id="placeholder" style="padding: 2rem;">
             <div style="font-size: 40px; margin-bottom: 10px;">📸</div>
-            <p>사진을 클릭하여 업로드하세요</p>
+            <p>아래 버튼을 눌러 시작하세요</p>
         </div>
-        <input type="file" id="fileInput" hidden accept="image/*" onchange="handleImage(event)">
     </div>
 
-    <div id="loading" class="loading">분석 중...</div>
+    <div class="button-group">
+        <button class="action-btn" onclick="startWebcam()">🎥 실시간 카메라</button>
+        <button class="action-btn secondary" onclick="document.getElementById('fileInput').click()">📁 사진 업로드</button>
+        <input type="file" id="fileInput" hidden accept="image/*" onchange="handleImage(event)">
+    </div>
 
     <div id="resultArea" class="result-area">
         <div id="label-container"></div>
         <div class="description-box" id="descriptionBox">
-            결과를 바탕으로 스타일링 팁을 확인해보세요.
+            분석을 시작하면 이곳에 스타일링 팁이 표시됩니다.
         </div>
     </div>
 
@@ -223,42 +255,66 @@ h1 {
 
 <script>
     const URL = "https://teachablemachine.withgoogle.com/models/r_j-J8oPR/";
-    let model, maxPredictions;
+    let model, webcam, maxPredictions;
+    let isWebcamRunning = false;
 
-    async function init() {
+    async function loadModel() {
+        if (model) return;
         const modelURL = URL + "model.json";
         const metadataURL = URL + "metadata.json";
         model = await tmImage.load(modelURL, metadataURL);
         maxPredictions = model.getTotalClasses();
     }
 
+    async function startWebcam() {
+        await loadModel();
+        document.getElementById('placeholder').style.display = 'none';
+        document.getElementById('imagePreview').style.display = 'none';
+        
+        const flip = true;
+        webcam = new tmImage.Webcam(400, 400, flip);
+        await webcam.setup();
+        await webcam.play();
+        isWebcamRunning = true;
+        
+        document.getElementById("webcam-container").innerHTML = "";
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+        window.requestAnimationFrame(loop);
+    }
+
+    async function loop() {
+        if (!isWebcamRunning) return;
+        webcam.update();
+        await predict(webcam.canvas);
+        window.requestAnimationFrame(loop);
+    }
+
     async function handleImage(event) {
         const input = event.target;
         if (!input.files || !input.files[0]) return;
+
+        isWebcamRunning = false;
+        if (webcam) await webcam.stop();
+        document.getElementById("webcam-container").innerHTML = "";
 
         const reader = new FileReader();
         reader.onload = async function(e) {
             const img = document.getElementById('imagePreview');
             img.src = e.target.result;
             img.style.display = 'block';
-            document.getElementById('uploadPlaceholder').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('resultArea').style.display = 'none';
+            document.getElementById('placeholder').style.display = 'none';
 
-            if (!model) await init();
+            await loadModel();
             predict(img);
         };
         reader.readAsDataURL(input.files[0]);
     }
 
-    async function predict(imageElement) {
-        const prediction = await model.predict(imageElement);
+    async function predict(inputMedia) {
+        const prediction = await model.predict(inputMedia);
         const labelContainer = document.getElementById("label-container");
         labelContainer.innerHTML = "";
         
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('resultArea').style.display = 'block';
-
         let topResult = { className: "", probability: 0 };
 
         for (let i = 0; i < maxPredictions; i++) {
@@ -286,11 +342,11 @@ h1 {
 
     function updateDescription(className) {
         const descriptions = {
-            "Straight": "<strong>💎 스트레이트 체형:</strong> 입체적이고 근육질인 상체가 특징입니다. 심플하고 고급스러운 셔츠, 브이넥, 직선적인 핏의 슬랙스가 가장 잘 어울립니다.",
-            "Wave": "<strong>🌸 웨이브 체형:</strong> 가냘픈 상체와 곡선적인 하체가 특징입니다. 화려한 장식, 하이웨이스트, 부드러운 소재의 옷으로 볼륨감을 살려보세요.",
-            "Natural": "<strong>🌿 내추럴 체형:</strong> 뼈대가 발달하고 중성적인 분위기가 특징입니다. 오버사이즈 핏, 리넨 소재, 레이어드 스타일 등 자연스럽고 편안한 룩이 베스트입니다."
+            "Straight": "<strong>💎 스트레이트 체형:</strong> 입체적이고 근육질인 상체가 특징입니다. 심플하고 고급스러운 스타일이 베스트!",
+            "Wave": "<strong>🌸 웨이브 체형:</strong> 가냘픈 상체와 곡선적인 하체가 특징입니다. 화려한 장식과 하이웨이스트를 추천합니다.",
+            "Natural": "<strong>🌿 내추럴 체형:</strong> 뼈대가 발달하고 중성적인 분위기가 특징입니다. 자연스러운 오버사이즈 핏이 잘 어울립니다."
         };
-        document.getElementById('descriptionBox').innerHTML = descriptions[className] || "사진을 분석하여 당신의 체형 특징을 알려드립니다.";
+        document.getElementById('descriptionBox').innerHTML = descriptions[className] || "분석 중입니다...";
     }
 
     function toggleTheme() {
@@ -305,8 +361,6 @@ h1 {
         document.body.classList.add('dark-mode');
         document.getElementById('themeToggle').innerText = '☀️';
     }
-
-    init(); // 미리 모델 로드 시작
 </script>
 
 <script>
