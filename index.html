@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>로또 번호 추천기</title>
+<title>AI 체형 진단 (스트레이트/웨이브/내추럴)</title>
 
 <style>
 :root {
@@ -13,7 +12,6 @@
     --text-color: #1e293b;
     --heading-gradient: linear-gradient(to right, #2563eb, #7c3aed);
     --btn-bg: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-    --ball-shadow: rgba(0, 0, 0, 0.2);
     --border-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -23,7 +21,6 @@ body.dark-mode {
     --text-color: #f8fafc;
     --heading-gradient: linear-gradient(to right, #38bdf8, #818cf8);
     --btn-bg: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    --ball-shadow: rgba(0, 0, 0, 0.4);
     --border-color: rgba(255, 255, 255, 0.1);
 }
 
@@ -31,17 +28,17 @@ body {
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: var(--bg-color);
     margin: 0;
-    padding: 0;
+    padding: 20px 0;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
     min-height: 100vh;
     color: var(--text-color);
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .theme-toggle {
-    position: absolute;
+    position: fixed;
     top: 20px;
     right: 20px;
     padding: 10px;
@@ -56,98 +53,109 @@ body {
     border: 1px solid var(--border-color);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     font-size: 20px;
-    transition: all 0.2s ease;
+    z-index: 1000;
 }
 
 .container {
     background: var(--container-bg);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    padding: 3rem;
+    padding: 2rem;
     border-radius: 2rem;
     border: 1px solid var(--border-color);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
     text-align: center;
     width: 90%;
     max-width: 500px;
-    transition: all 0.3s ease;
 }
 
 h1 {
-    margin-bottom: 2rem;
-    font-size: 2rem;
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
     font-weight: 800;
     background: var(--heading-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
-.controls {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
+.subtitle {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-bottom: 2rem;
 }
 
-button.generate-btn {
-    padding: 1rem 2.5rem;
-    font-size: 1.125rem;
-    font-weight: 700;
-    border: none;
-    border-radius: 1rem;
-    background: var(--btn-bg);
-    color: white;
+/* AI Upload Section */
+.upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
-button.generate-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
-    filter: brightness(1.1);
+.upload-area:hover {
+    background: rgba(99, 102, 241, 0.05);
+    border-color: #6366f1;
 }
 
-.result {
-    margin-top: 3rem;
-    min-height: 200px;
+#imagePreview {
+    width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: 1rem;
+    display: none;
+    margin-bottom: 1rem;
 }
 
-.lotto-set {
-    margin: 1.5rem 0;
+.loading {
+    display: none;
+    margin: 1rem 0;
+}
+
+.result-area {
+    margin-top: 2rem;
+    display: none;
+}
+
+.prediction-bar {
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.label-info {
     display: flex;
-    justify-content: center;
-    gap: 0.75rem;
-    opacity: 0;
-    transform: scale(0.9);
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 0.9rem;
 }
 
-@keyframes popIn {
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+.progress-container {
+    height: 12px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 6px;
+    overflow: hidden;
 }
 
-.ball {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    font-weight: 800;
-    color: white;
-    font-size: 1.125rem;
-    box-shadow: 0 4px 6px -1px var(--ball-shadow);
+.progress-fill {
+    height: 100%;
+    background: var(--btn-bg);
+    width: 0%;
+    transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.yellow { background: #eab308; }
-.blue   { background: #3b82f6; }
-.red    { background: #ef4444; }
-.gray   { background: #64748b; }
-.green  { background: #22c55e; }
+.description-box {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(0,0,0,0.05);
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    text-align: left;
+}
 
+/* Partnership Form */
 .partnership-form {
     margin-top: 3rem;
     padding-top: 2rem;
@@ -155,58 +163,16 @@ button.generate-btn:hover {
     text-align: left;
 }
 
-.partnership-form h3 {
-    margin-bottom: 1.5rem;
-    font-size: 1.25rem;
-    color: var(--text-color);
-    text-align: center;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.partnership-form input, 
-.partnership-form textarea {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border-radius: 0.75rem;
-    border: 1px solid var(--border-color);
-    background: var(--bg-color);
-    color: var(--text-color);
-    font-family: inherit;
-    font-size: 0.9rem;
-    box-sizing: border-box;
-    transition: all 0.2s ease;
-}
-
-.partnership-form input:focus, 
-.partnership-form textarea:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-}
-
-.partnership-form textarea {
-    height: 100px;
-    resize: none;
+.form-group input, .form-group textarea {
+    width: 100%; padding: 0.75rem; border-radius: 0.75rem;
+    border: 1px solid var(--border-color); background: var(--bg-color);
+    color: var(--text-color); box-sizing: border-box; margin-bottom: 1rem;
 }
 
 .submit-btn {
-    width: 100%;
-    padding: 0.75rem;
-    border: none;
-    border-radius: 0.75rem;
-    background: var(--text-color);
-    color: var(--bg-color);
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.submit-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
+    width: 100%; padding: 0.75rem; border-radius: 0.75rem;
+    background: var(--text-color); color: var(--bg-color);
+    font-weight: 700; cursor: pointer; border: none;
 }
 
 </style>
@@ -217,19 +183,32 @@ button.generate-btn:hover {
 <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌓</div>
 
 <div class="container">
-    <h1>🎯 로또 번호 추천</h1>
-    <div class="controls">
-        <button class="generate-btn" onclick="generateLotto()">번호 생성</button>
+    <h1>🧬 AI 체형 분석기</h1>
+    <p class="subtitle">전신 사진을 올려 당신의 체형을 확인해보세요</p>
+    
+    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <img id="imagePreview" src="" alt="Preview">
+        <div id="uploadPlaceholder">
+            <div style="font-size: 40px; margin-bottom: 10px;">📸</div>
+            <p>사진을 클릭하여 업로드하세요</p>
+        </div>
+        <input type="file" id="fileInput" hidden accept="image/*" onchange="handleImage(event)">
     </div>
-    <div class="result" id="lottoResult"></div>
+
+    <div id="loading" class="loading">분석 중...</div>
+
+    <div id="resultArea" class="result-area">
+        <div id="label-container"></div>
+        <div class="description-box" id="descriptionBox">
+            결과를 바탕으로 스타일링 팁을 확인해보세요.
+        </div>
+    </div>
 
     <div class="partnership-form">
-        <h3>🤝 제휴 문의</h3>
+        <h3 style="text-align: center;">🤝 제휴 문의</h3>
         <form action="https://formspree.io/f/xnjbbbzk" method="POST">
             <div class="form-group">
                 <input type="email" name="email" placeholder="이메일 주소" required>
-            </div>
-            <div class="form-group">
                 <textarea name="message" placeholder="문의 내용을 입력해주세요" required></textarea>
             </div>
             <button type="submit" class="submit-btn">문의하기</button>
@@ -237,80 +216,106 @@ button.generate-btn:hover {
     </div>
 
     <div id="disqus_thread" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);"></div>
-    <script>
-        /**
-        *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
-        *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables    */
-        /*
-        var disqus_config = function () {
-        this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
-        this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
-        };
-        */
-        (function() { // DON'T EDIT BELOW THIS LINE
-        var d = document, s = d.createElement('script');
-        s.src = 'https://product-builder-ayfw2rgli1.disqus.com/embed.js';
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
 <script>
-function toggleTheme() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('lotto-theme', isDark ? 'dark' : 'light');
-    document.getElementById('themeToggle').innerText = isDark ? '☀️' : '🌙';
-}
+    const URL = "https://teachablemachine.withgoogle.com/models/r_j-J8oPR/";
+    let model, maxPredictions;
 
-// Load saved theme
-const savedTheme = localStorage.getItem('lotto-theme');
-if (savedTheme === 'dark') {
-    document.body.classList.add('dark-mode');
-    document.getElementById('themeToggle').innerText = '☀️';
-}
+    async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+    }
 
-function getColorClass(num) {
-    if (num <= 10) return "yellow";
-    if (num <= 20) return "blue";
-    if (num <= 30) return "red";
-    if (num <= 40) return "gray";
-    return "green";
-}
+    async function handleImage(event) {
+        const input = event.target;
+        if (!input.files || !input.files[0]) return;
 
-function generateOneSet() {
-    const numbers = [];
-    while (numbers.length < 6) {
-        const randomNum = Math.floor(Math.random() * 45) + 1;
-        if (!numbers.includes(randomNum)) {
-            numbers.push(randomNum);
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const img = document.getElementById('imagePreview');
+            img.src = e.target.result;
+            img.style.display = 'block';
+            document.getElementById('uploadPlaceholder').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultArea').style.display = 'none';
+
+            if (!model) await init();
+            predict(img);
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    async function predict(imageElement) {
+        const prediction = await model.predict(imageElement);
+        const labelContainer = document.getElementById("label-container");
+        labelContainer.innerHTML = "";
+        
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('resultArea').style.display = 'block';
+
+        let topResult = { className: "", probability: 0 };
+
+        for (let i = 0; i < maxPredictions; i++) {
+            const prob = (prediction[i].probability * 100).toFixed(0);
+            if (prediction[i].probability > topResult.probability) {
+                topResult = prediction[i];
+            }
+
+            const barHtml = `
+                <div class="prediction-bar">
+                    <div class="label-info">
+                        <span>${prediction[i].className}</span>
+                        <span>${prob}%</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-fill" style="width: ${prob}%"></div>
+                    </div>
+                </div>
+            `;
+            labelContainer.innerHTML += barHtml;
         }
+
+        updateDescription(topResult.className);
     }
-    return numbers.sort((a, b) => a - b);
-}
 
-function generateLotto() {
-    const resultDiv = document.getElementById("lottoResult");
-    resultDiv.innerHTML = "";
-
-    for (let i = 0; i < 5; i++) {
-        const set = generateOneSet();
-        const setDiv = document.createElement("div");
-        setDiv.className = "lotto-set";
-
-        set.forEach(num => {
-            const ball = document.createElement("div");
-            ball.className = "ball " + getColorClass(num);
-            ball.innerText = num;
-            setDiv.appendChild(ball);
-        });
-
-        resultDiv.appendChild(setDiv);
+    function updateDescription(className) {
+        const descriptions = {
+            "Straight": "<strong>💎 스트레이트 체형:</strong> 입체적이고 근육질인 상체가 특징입니다. 심플하고 고급스러운 셔츠, 브이넥, 직선적인 핏의 슬랙스가 가장 잘 어울립니다.",
+            "Wave": "<strong>🌸 웨이브 체형:</strong> 가냘픈 상체와 곡선적인 하체가 특징입니다. 화려한 장식, 하이웨이스트, 부드러운 소재의 옷으로 볼륨감을 살려보세요.",
+            "Natural": "<strong>🌿 내추럴 체형:</strong> 뼈대가 발달하고 중성적인 분위기가 특징입니다. 오버사이즈 핏, 리넨 소재, 레이어드 스타일 등 자연스럽고 편안한 룩이 베스트입니다."
+        };
+        document.getElementById('descriptionBox').innerHTML = descriptions[className] || "사진을 분석하여 당신의 체형 특징을 알려드립니다.";
     }
-}
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('lotto-theme', isDark ? 'dark' : 'light');
+        document.getElementById('themeToggle').innerText = isDark ? '☀️' : '🌙';
+    }
+
+    const savedTheme = localStorage.getItem('lotto-theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('themeToggle').innerText = '☀️';
+    }
+
+    init(); // 미리 모델 로드 시작
 </script>
 
+<script>
+    (function() { 
+    var d = document, s = d.createElement('script');
+    s.src = 'https://product-builder-ayfw2rgli1.disqus.com/embed.js';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+    })();
+</script>
 </body>
 </html>
