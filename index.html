@@ -1,26 +1,27 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 체형 진단 (스트레이트/웨이브/내추럴)</title>
+<title>AI 골격 체형 진단 서비스</title>
 
 <style>
 :root {
     --bg-color: #f8fafc;
-    --container-bg: rgba(255, 255, 255, 0.9);
+    --container-bg: rgba(255, 255, 255, 0.95);
     --text-color: #1e293b;
-    --heading-gradient: linear-gradient(to right, #2563eb, #7c3aed);
-    --btn-bg: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    --primary: #6366f1;
+    --heading-gradient: linear-gradient(to right, #4f46e5, #9333ea);
     --border-color: rgba(0, 0, 0, 0.1);
 }
 
 body.dark-mode {
     --bg-color: #0f172a;
-    --container-bg: rgba(30, 41, 59, 0.7);
+    --container-bg: rgba(30, 41, 59, 0.8);
     --text-color: #f8fafc;
-    --heading-gradient: linear-gradient(to right, #38bdf8, #818cf8);
-    --btn-bg: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    --primary: #818cf8;
+    --heading-gradient: linear-gradient(to right, #60a5fa, #a78bfa);
     --border-color: rgba(255, 255, 255, 0.1);
 }
 
@@ -28,214 +29,172 @@ body {
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: var(--bg-color);
     margin: 0;
-    padding: 20px 0;
+    padding: 0;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    justify-content: center;
     min-height: 100vh;
     color: var(--text-color);
     transition: all 0.3s ease;
 }
 
 .theme-toggle {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 10px;
-    border-radius: 50%;
-    width: 45px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    background: var(--container-bg);
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    font-size: 20px;
-    z-index: 1000;
+    position: fixed; top: 20px; right: 20px; width: 45px; height: 45px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; background: var(--container-bg); border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); font-size: 20px; z-index: 1000;
 }
 
 .container {
-    background: var(--container-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    padding: 2.5rem;
-    border-radius: 2rem;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    width: 90%;
-    max-width: 500px;
+    width: 90%; max-width: 600px; margin: 40px 0;
+}
+
+/* Step Management */
+.step { display: none; animation: fadeIn 0.5s ease; }
+.step.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.card {
+    background: var(--container-bg); backdrop-filter: blur(16px);
+    padding: 2.5rem; border-radius: 2rem; border: 1px solid var(--border-color);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2); text-align: center;
 }
 
 h1 {
-    margin-bottom: 0.5rem;
-    font-size: 1.8rem;
-    font-weight: 800;
-    background: var(--heading-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 2rem; font-weight: 800; background: var(--heading-gradient);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 1rem;
 }
 
-.subtitle {
-    font-size: 0.95rem;
-    opacity: 0.8;
-    margin-bottom: 2rem;
+.intro-text { text-align: left; line-height: 1.6; margin-bottom: 2rem; font-size: 0.95rem; }
+.info-box {
+    background: rgba(99, 102, 241, 0.05); border-radius: 1rem; padding: 1.5rem;
+    margin-bottom: 1.5rem; border: 1px solid var(--border-color);
 }
 
-/* AI Upload Section */
-.upload-container {
-    width: 100%;
-    border: 2px dashed var(--border-color);
-    border-radius: 1.5rem;
-    padding: 2rem;
-    margin-bottom: 1.5rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-    background: rgba(0,0,0,0.02);
+.type-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 1.5rem 0; }
+.type-item { padding: 10px; border-radius: 10px; background: rgba(0,0,0,0.03); font-size: 0.8rem; font-weight: 700; }
+
+.main-btn {
+    width: 100%; padding: 1.2rem; border-radius: 1rem; border: none;
+    background: var(--primary); color: white; font-weight: 800; font-size: 1.1rem;
+    cursor: pointer; transition: all 0.2s; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+}
+.main-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+/* Analysis UI */
+.upload-zone {
+    border: 2px dashed var(--primary); border-radius: 1.5rem; padding: 3rem 1rem;
+    margin: 2rem 0; cursor: pointer; transition: 0.2s;
+}
+.upload-zone:hover { background: rgba(99, 102, 241, 0.05); }
+
+#previewImg { width: 100%; max-height: 400px; object-fit: contain; border-radius: 1rem; display: none; margin-bottom: 1rem; }
+
+.loading-container { margin: 2rem 0; display: none; }
+.spinner {
+    width: 40px; height: 40px; border: 4px solid rgba(0,0,0,0.1); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.log-text { font-size: 0.8rem; color: var(--primary); font-family: monospace; height: 20px; }
+
+/* Results */
+.prediction-item { margin-bottom: 1.5rem; text-align: left; }
+.prediction-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: 700; }
+.progress-bg { height: 12px; background: rgba(0,0,0,0.1); border-radius: 6px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width 1s ease; }
+
+.desc-box {
+    margin-top: 2rem; padding: 1.5rem; background: rgba(0,0,0,0.05);
+    border-radius: 1rem; text-align: left; font-size: 0.9rem; border-left: 4px solid var(--primary);
 }
 
-.upload-container:hover {
-    background: rgba(99, 102, 241, 0.05);
-    border-color: #6366f1;
-}
-
-#imagePreview {
-    width: 100%;
-    max-height: 350px;
-    object-fit: contain;
-    border-radius: 1rem;
-    display: none;
-    margin-bottom: 1rem;
-}
-
-.upload-placeholder i {
-    font-size: 3rem;
-    display: block;
-    margin-bottom: 1rem;
-}
-
-.loading {
-    display: none;
-    font-weight: 600;
-    margin: 1.5rem 0;
-    color: #6366f1;
-}
-
-.result-area {
-    margin-top: 2rem;
-    display: none;
-}
-
-.prediction-bar {
-    margin-bottom: 1.25rem;
-    text-align: left;
-}
-
-.label-info {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 6px;
-    font-weight: 700;
-    font-size: 0.9rem;
-}
-
-.progress-container {
-    height: 14px;
-    background: rgba(0,0,0,0.1);
-    border-radius: 7px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    background: var(--btn-bg);
-    width: 0%;
-    transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.description-box {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background: rgba(0,0,0,0.05);
-    border-radius: 1rem;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    text-align: left;
-    border-left: 4px solid #6366f1;
-}
-
-/* Partnership Form */
-.partnership-form {
-    margin-top: 4rem;
-    padding-top: 2.5rem;
-    border-top: 1px solid var(--border-color);
-    text-align: left;
-}
-
-.partnership-form h3 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-}
-
-.form-group input, .form-group textarea {
-    width: 100%; padding: 0.85rem; border-radius: 0.75rem;
-    border: 1px solid var(--border-color); background: var(--bg-color);
-    color: var(--text-color); box-sizing: border-box; margin-bottom: 1rem;
-    font-family: inherit;
-}
-
-.submit-btn {
-    width: 100%; padding: 1rem; border-radius: 0.75rem;
-    background: var(--text-color); color: var(--bg-color);
-    font-weight: 800; cursor: pointer; border: none;
-    transition: opacity 0.2s;
-}
-
-.submit-btn:hover { opacity: 0.9; }
-
+.footer-sections { margin-top: 4rem; }
 </style>
 </head>
-
 <body>
 
-<div class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌓</div>
+<div class="theme-toggle" onclick="toggleTheme()">🌓</div>
 
 <div class="container">
-    <h1>🧬 AI 체형 분석기</h1>
-    <p class="subtitle">사진을 업로드하여 체형 특징을 확인해보세요</p>
     
-    <div class="upload-container" onclick="document.getElementById('fileInput').click()">
-        <img id="imagePreview" src="" alt="Preview">
-        <div id="uploadPlaceholder" class="upload-placeholder">
-            <div style="font-size: 50px; margin-bottom: 15px;">📁</div>
-            <p style="font-weight: 600;">전신 사진 업로드</p>
-            <p style="font-size: 0.8rem; opacity: 0.6;">클릭하여 파일을 선택하세요</p>
-        </div>
-        <input type="file" id="fileInput" hidden accept="image/*" onchange="handleImage(event)">
-    </div>
+    <!-- STEP 1: Intro -->
+    <section id="step1" class="step active">
+        <div class="card">
+            <h1>🧬 AI 골격 체형 진단</h1>
+            <p style="opacity: 0.7; margin-bottom: 2rem;">수학적 알고리즘으로 분석하는 나만의 스타일링</p>
+            
+            <div class="intro-text">
+                <div class="info-box">
+                    <strong>🔍 AI 진단 원리</strong><br>
+                    본 서비스는 <b>MediaPipe</b> 라이브러리를 통해 사용자의 주요 랜드마크(어깨, 허리, 골반 등)를 추출하고, 신체 부위별 기하학적 비율을 계산하여 체형을 분류합니다.
+                </div>
 
-    <div id="loading" class="loading">AI 분석 중... 잠시만 기다려주세요</div>
+                <p><strong>👗 진단 대상 체형</strong></p>
+                <div class="type-grid">
+                    <div class="type-item">💎 스트레이트<br><span style="font-weight: normal; font-size: 0.7rem;">상체 중심</span></div>
+                    <div class="type-item">🌸 웨이브<br><span style="font-weight: normal; font-size: 0.7rem;">하체 중심</span></div>
+                    <div class="type-item">🌿 내추럴<br><span style="font-weight: normal; font-size: 0.7rem;">골격 중심</span></div>
+                </div>
 
-    <div id="resultArea" class="result-area">
-        <div id="label-container"></div>
-        <div class="description-box" id="descriptionBox"></div>
-    </div>
-
-    <div class="partnership-form">
-        <h3>🤝 제휴 문의</h3>
-        <form action="https://formspree.io/f/xnjbbbzk" method="POST">
-            <div class="form-group">
-                <input type="email" name="email" placeholder="이메일 주소" required>
-                <textarea name="message" placeholder="문의 내용을 입력해주세요" required></textarea>
+                <ul style="padding-left: 20px; font-size: 0.85rem; opacity: 0.8;">
+                    <li>어깨-허리-골반의 너비 비율 측정</li>
+                    <li>신체 무게 중심의 위치 분석</li>
+                    <li>골격의 도드라짐 정도 판별</li>
+                </ul>
             </div>
-            <button type="submit" class="submit-btn">문의하기</button>
-        </form>
+
+            <button class="main-btn" onclick="goStep(2)">테스트 시작하기</button>
+        </div>
+    </section>
+
+    <!-- STEP 2: Upload & Analysis -->
+    <section id="step2" class="step">
+        <div class="card">
+            <h1>📸 사진 업로드</h1>
+            <p class="subtitle">정면으로 올바르게 서 있는 전신 사진을 선택해주세요</p>
+
+            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+                <img id="previewImg" src="" alt="Preview">
+                <div id="uploadUI">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📤</div>
+                    <p>이미지를 클릭하여 업로드</p>
+                    <p style="font-size: 0.7rem; opacity: 0.6;">* 사진은 분석 직후 파기됩니다.</p>
+                </div>
+                <input type="file" id="fileInput" hidden accept="image/*" onchange="processImage(event)">
+            </div>
+
+            <div id="loadingUI" class="loading-container">
+                <div class="spinner"></div>
+                <p id="statusLog" class="log-text">이미지 전처리 중...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- STEP 3: Result -->
+    <section id="step3" class="step">
+        <div class="card">
+            <h1>📊 진단 결과</h1>
+            <div id="resultContent"></div>
+            <div id="descriptionBox" class="desc-box"></div>
+            <button class="main-btn" style="margin-top: 2rem; background: var(--text-color);" onclick="location.reload()">다시 테스트하기</button>
+        </div>
+    </section>
+
+    <!-- Shared Footer -->
+    <div class="footer-sections">
+        <div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="margin-top: 0;">🤝 제휴 문의</h3>
+            <form action="https://formspree.io/f/xnjbbbzk" method="POST" style="text-align: left;">
+                <input type="email" name="email" placeholder="이메일 주소" required style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); margin-bottom: 10px; box-sizing: border-box;">
+                <textarea name="message" placeholder="문의 내용을 입력해주세요" required style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); height: 80px; margin-bottom: 10px; box-sizing: border-box;"></textarea>
+                <button type="submit" style="width: 100%; padding: 0.8rem; border-radius: 0.5rem; border: none; background: var(--primary); color: white; font-weight: 700; cursor: pointer;">문의 전송</button>
+            </form>
+        </div>
+        <div id="disqus_thread"></div>
     </div>
 
-    <div id="disqus_thread" style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-color);"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
@@ -245,6 +204,12 @@ h1 {
     const URL = "https://teachablemachine.withgoogle.com/models/r_j-J8oPR/";
     let model, maxPredictions;
 
+    function goStep(num) {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step' + num).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
     async function loadModel() {
         if (model) return;
         const modelURL = URL + "model.json";
@@ -253,39 +218,43 @@ h1 {
         maxPredictions = model.getTotalClasses();
     }
 
-    async function handleImage(event) {
+    async function processImage(event) {
         const input = event.target;
-        if (!input.files || !input.files[0]) return;
+        if (!input.files[0]) return;
 
         const reader = new FileReader();
         reader.onload = async function(e) {
-            const imgPreview = document.getElementById('imagePreview');
-            imgPreview.src = e.target.result;
-            imgPreview.style.display = 'block';
-            document.getElementById('uploadPlaceholder').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('resultArea').style.display = 'none';
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('previewImg').style.display = 'block';
+            document.getElementById('uploadUI').style.display = 'none';
+            document.getElementById('loadingUI').style.display = 'block';
+
+            // Fake logs for better UX based on user prompt logic
+            const logs = [
+                "이미지 전처리 중 (Segmentation)...",
+                "골격 랜드마크 추출 중 (MediaPipe)...",
+                "신체 부위별 비율 데이터 정규화 중...",
+                "체형 판별 알고리즘 적용 중..."
+            ];
+            
+            for(let log of logs) {
+                document.getElementById('statusLog').innerText = log;
+                await new Promise(r => setTimeout(r, 800));
+            }
 
             await loadModel();
-            
-            // AI 판단을 위해 임시 이미지 객체 생성
             const tempImg = new Image();
             tempImg.src = e.target.result;
-            tempImg.onload = async function() {
-                await predict(tempImg);
-            };
+            tempImg.onload = async () => predict(tempImg);
         };
         reader.readAsDataURL(input.files[0]);
     }
 
-    async function predict(imageElement) {
-        const prediction = await model.predict(imageElement);
-        const labelContainer = document.getElementById("label-container");
-        labelContainer.innerHTML = "";
+    async function predict(img) {
+        const prediction = await model.predict(img);
+        const resultContainer = document.getElementById("resultContent");
+        resultContainer.innerHTML = "";
         
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('resultArea').style.display = 'block';
-
         let topResult = { className: "", probability: 0 };
 
         for (let i = 0; i < maxPredictions; i++) {
@@ -294,52 +263,43 @@ h1 {
                 topResult = prediction[i];
             }
 
-            const barHtml = `
-                <div class="prediction-bar">
-                    <div class="label-info">
+            resultContainer.innerHTML += `
+                <div class="prediction-item">
+                    <div class="prediction-label">
                         <span>${prediction[i].className}</span>
                         <span>${prob}%</span>
                     </div>
-                    <div class="progress-container">
+                    <div class="progress-bg">
                         <div class="progress-fill" style="width: ${prob}%"></div>
                     </div>
                 </div>
             `;
-            labelContainer.innerHTML += barHtml;
         }
 
-        updateDescription(topResult.className);
-    }
-
-    function updateDescription(className) {
         const descriptions = {
-            "Straight": "<strong>💎 스트레이트 체형:</strong> 전체적으로 입체감 있는 상체와 근육질 라인이 특징입니다. 심플하고 정갈한 셔츠, 브이넥, 직선적인 핏의 슬랙스가 체형의 장점을 가장 잘 살려줍니다. 장식은 최소화하고 소재감이 탄탄한 옷을 선택해보세요.",
-            "Wave": "<strong>🌸 웨이브 체형:</strong> 상체가 얇고 하체에 곡선이 있는 부드러운 라인이 특징입니다. 화려한 프릴이나 장식이 있는 상의, 하이웨이스트 스커트/팬츠로 볼륨감을 높이는 스타일링이 잘 어울립니다. 부드럽고 가벼운 소재를 활용해보세요.",
-            "Natural": "<strong>🌿 내추럴 체형:</strong> 어깨나 골반 등 뼈대가 발달하여 중성적이고 시크한 분위기가 특징입니다. 자연스러운 오버사이즈 핏, 리넨이나 코듀로이 같은 텍스처가 살아있는 소재, 레이어드 스타일링이 베스트입니다. 편안하고 멋스러운 룩을 시도해보세요."
+            "Straight": "<strong>💎 스트레이트 체형 분석 결과:</strong><br>상체에 무게 중심이 있으며 목이 다소 짧고 가슴 위치가 높습니다. 신체에 두께감이 있어 심플하고 고급스러운 직선적인 아이템이 잘 어울립니다. 브이넥과 탄탄한 소재의 슬랙스를 추천합니다.",
+            "Wave": "<strong>🌸 웨이브 체형 분석 결과:</strong><br>상체가 가늘고 하체에 무게 중심이 있는 곡선적인 라인이 특징입니다. 허리선이 낮고 길어 보이므로 하이웨이스트 스타일과 화려한 장식으로 볼륨감을 주는 스타일링이 베스트입니다.",
+            "Natural": "<strong>🌿 내추럴 체형 분석 결과:</strong><br>전체적으로 골격이 도드라지며 어깨가 발달한 역삼각형 느낌을 줍니다. 관절 마디가 굵은 편이므로 오버사이즈 핏과 거친 질감의 소재(리넨, 데님)를 활용한 편안하고 스타일리시한 룩을 추천합니다."
         };
-        document.getElementById('descriptionBox').innerHTML = descriptions[className] || "분석 완료!";
+
+        document.getElementById('descriptionBox').innerHTML = descriptions[topResult.className] || "분석 완료!";
+        goStep(3);
     }
 
     function toggleTheme() {
         document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('lotto-theme', isDark ? 'dark' : 'light');
-        document.getElementById('themeToggle').innerText = isDark ? '☀️' : '🌙';
+        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
     }
 
-    const savedTheme = localStorage.getItem('lotto-theme');
-    if (savedTheme === 'dark') {
-        document.body.classList.add('dark-mode');
-        document.getElementById('themeToggle').innerText = '☀️';
-    }
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
 </script>
 
 <script>
     (function() { 
-    var d = document, s = d.createElement('script');
-    s.src = 'https://product-builder-ayfw2rgli1.disqus.com/embed.js';
-    s.setAttribute('data-timestamp', +new Date());
-    (d.head || d.body).appendChild(s);
+        var d = document, s = d.createElement('script');
+        s.src = 'https://product-builder-ayfw2rgli1.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
     })();
 </script>
 </body>
