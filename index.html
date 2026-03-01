@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -61,7 +60,7 @@ body {
     background: var(--container-bg);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    padding: 2rem;
+    padding: 2.5rem;
     border-radius: 2rem;
     border: 1px solid var(--border-color);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
@@ -71,7 +70,7 @@ body {
 }
 
 h1 {
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
     font-size: 1.8rem;
     font-weight: 800;
     background: var(--heading-gradient);
@@ -80,89 +79,73 @@ h1 {
 }
 
 .subtitle {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     opacity: 0.8;
     margin-bottom: 2rem;
 }
 
-/* AI Section */
-.media-container {
-    position: relative;
+/* AI Upload Section */
+.upload-container {
     width: 100%;
+    border: 2px dashed var(--border-color);
     border-radius: 1.5rem;
-    overflow: hidden;
-    background: rgba(0,0,0,0.05);
+    padding: 2rem;
     margin-bottom: 1.5rem;
-    min-height: 200px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    background: rgba(0,0,0,0.02);
 }
 
-#webcam-container canvas {
-    width: 100% !important;
-    height: auto !important;
-    border-radius: 1.5rem;
+.upload-container:hover {
+    background: rgba(99, 102, 241, 0.05);
+    border-color: #6366f1;
 }
 
 #imagePreview {
     width: 100%;
-    max-height: 400px;
+    max-height: 350px;
     object-fit: contain;
-    display: none;
-}
-
-.button-group {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 1.5rem;
-    justify-content: center;
-}
-
-.action-btn {
-    padding: 0.8rem 1.2rem;
     border-radius: 1rem;
-    border: none;
-    background: var(--btn-bg);
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
+    display: none;
+    margin-bottom: 1rem;
 }
 
-.action-btn.secondary {
-    background: var(--text-color);
-    color: var(--bg-color);
+.upload-placeholder i {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
 }
 
-.action-btn:hover {
-    transform: translateY(-2px);
-    opacity: 0.9;
+.loading {
+    display: none;
+    font-weight: 600;
+    margin: 1.5rem 0;
+    color: #6366f1;
 }
 
 .result-area {
     margin-top: 2rem;
+    display: none;
 }
 
 .prediction-bar {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
     text-align: left;
 }
 
 .label-info {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 5px;
-    font-weight: 600;
+    margin-bottom: 6px;
+    font-weight: 700;
     font-size: 0.9rem;
 }
 
 .progress-container {
-    height: 12px;
+    height: 14px;
     background: rgba(0,0,0,0.1);
-    border-radius: 6px;
+    border-radius: 7px;
     overflow: hidden;
 }
 
@@ -170,7 +153,7 @@ h1 {
     height: 100%;
     background: var(--btn-bg);
     width: 0%;
-    transition: width 0.3s ease;
+    transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .description-box {
@@ -178,30 +161,40 @@ h1 {
     padding: 1.5rem;
     background: rgba(0,0,0,0.05);
     border-radius: 1rem;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     line-height: 1.6;
     text-align: left;
+    border-left: 4px solid #6366f1;
 }
 
 /* Partnership Form */
 .partnership-form {
-    margin-top: 3rem;
-    padding-top: 2rem;
+    margin-top: 4rem;
+    padding-top: 2.5rem;
     border-top: 1px solid var(--border-color);
     text-align: left;
 }
 
+.partnership-form h3 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
 .form-group input, .form-group textarea {
-    width: 100%; padding: 0.75rem; border-radius: 0.75rem;
+    width: 100%; padding: 0.85rem; border-radius: 0.75rem;
     border: 1px solid var(--border-color); background: var(--bg-color);
     color: var(--text-color); box-sizing: border-box; margin-bottom: 1rem;
+    font-family: inherit;
 }
 
 .submit-btn {
-    width: 100%; padding: 0.75rem; border-radius: 0.75rem;
+    width: 100%; padding: 1rem; border-radius: 0.75rem;
     background: var(--text-color); color: var(--bg-color);
-    font-weight: 700; cursor: pointer; border: none;
+    font-weight: 800; cursor: pointer; border: none;
+    transition: opacity 0.2s;
 }
+
+.submit-btn:hover { opacity: 0.9; }
 
 </style>
 </head>
@@ -211,33 +204,28 @@ h1 {
 <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌓</div>
 
 <div class="container">
-    <h1>🧬 AI 실시간 체형 분석</h1>
-    <p class="subtitle">카메라를 켜거나 사진을 올려 체형을 진단해보세요</p>
+    <h1>🧬 AI 체형 분석기</h1>
+    <p class="subtitle">사진을 업로드하여 체형 특징을 확인해보세요</p>
     
-    <div class="media-container">
-        <div id="webcam-container"></div>
+    <div class="upload-container" onclick="document.getElementById('fileInput').click()">
         <img id="imagePreview" src="" alt="Preview">
-        <div id="placeholder" style="padding: 2rem;">
-            <div style="font-size: 40px; margin-bottom: 10px;">📸</div>
-            <p>아래 버튼을 눌러 시작하세요</p>
+        <div id="uploadPlaceholder" class="upload-placeholder">
+            <div style="font-size: 50px; margin-bottom: 15px;">📁</div>
+            <p style="font-weight: 600;">전신 사진 업로드</p>
+            <p style="font-size: 0.8rem; opacity: 0.6;">클릭하여 파일을 선택하세요</p>
         </div>
-    </div>
-
-    <div class="button-group">
-        <button class="action-btn" onclick="startWebcam()">🎥 실시간 카메라</button>
-        <button class="action-btn secondary" onclick="document.getElementById('fileInput').click()">📁 사진 업로드</button>
         <input type="file" id="fileInput" hidden accept="image/*" onchange="handleImage(event)">
     </div>
 
+    <div id="loading" class="loading">AI 분석 중... 잠시만 기다려주세요</div>
+
     <div id="resultArea" class="result-area">
         <div id="label-container"></div>
-        <div class="description-box" id="descriptionBox">
-            분석을 시작하면 이곳에 스타일링 팁이 표시됩니다.
-        </div>
+        <div class="description-box" id="descriptionBox"></div>
     </div>
 
     <div class="partnership-form">
-        <h3 style="text-align: center;">🤝 제휴 문의</h3>
+        <h3>🤝 제휴 문의</h3>
         <form action="https://formspree.io/f/xnjbbbzk" method="POST">
             <div class="form-group">
                 <input type="email" name="email" placeholder="이메일 주소" required>
@@ -247,7 +235,7 @@ h1 {
         </form>
     </div>
 
-    <div id="disqus_thread" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border-color);"></div>
+    <div id="disqus_thread" style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-color);"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
@@ -255,8 +243,7 @@ h1 {
 
 <script>
     const URL = "https://teachablemachine.withgoogle.com/models/r_j-J8oPR/";
-    let model, webcam, maxPredictions;
-    let isWebcamRunning = false;
+    let model, maxPredictions;
 
     async function loadModel() {
         if (model) return;
@@ -266,55 +253,39 @@ h1 {
         maxPredictions = model.getTotalClasses();
     }
 
-    async function startWebcam() {
-        await loadModel();
-        document.getElementById('placeholder').style.display = 'none';
-        document.getElementById('imagePreview').style.display = 'none';
-        
-        const flip = true;
-        webcam = new tmImage.Webcam(400, 400, flip);
-        await webcam.setup();
-        await webcam.play();
-        isWebcamRunning = true;
-        
-        document.getElementById("webcam-container").innerHTML = "";
-        document.getElementById("webcam-container").appendChild(webcam.canvas);
-        window.requestAnimationFrame(loop);
-    }
-
-    async function loop() {
-        if (!isWebcamRunning) return;
-        webcam.update();
-        await predict(webcam.canvas);
-        window.requestAnimationFrame(loop);
-    }
-
     async function handleImage(event) {
         const input = event.target;
         if (!input.files || !input.files[0]) return;
 
-        isWebcamRunning = false;
-        if (webcam) await webcam.stop();
-        document.getElementById("webcam-container").innerHTML = "";
-
         const reader = new FileReader();
         reader.onload = async function(e) {
-            const img = document.getElementById('imagePreview');
-            img.src = e.target.result;
-            img.style.display = 'block';
-            document.getElementById('placeholder').style.display = 'none';
+            const imgPreview = document.getElementById('imagePreview');
+            imgPreview.src = e.target.result;
+            imgPreview.style.display = 'block';
+            document.getElementById('uploadPlaceholder').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultArea').style.display = 'none';
 
             await loadModel();
-            predict(img);
+            
+            // AI 판단을 위해 임시 이미지 객체 생성
+            const tempImg = new Image();
+            tempImg.src = e.target.result;
+            tempImg.onload = async function() {
+                await predict(tempImg);
+            };
         };
         reader.readAsDataURL(input.files[0]);
     }
 
-    async function predict(inputMedia) {
-        const prediction = await model.predict(inputMedia);
+    async function predict(imageElement) {
+        const prediction = await model.predict(imageElement);
         const labelContainer = document.getElementById("label-container");
         labelContainer.innerHTML = "";
         
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('resultArea').style.display = 'block';
+
         let topResult = { className: "", probability: 0 };
 
         for (let i = 0; i < maxPredictions; i++) {
@@ -342,11 +313,11 @@ h1 {
 
     function updateDescription(className) {
         const descriptions = {
-            "Straight": "<strong>💎 스트레이트 체형:</strong> 입체적이고 근육질인 상체가 특징입니다. 심플하고 고급스러운 스타일이 베스트!",
-            "Wave": "<strong>🌸 웨이브 체형:</strong> 가냘픈 상체와 곡선적인 하체가 특징입니다. 화려한 장식과 하이웨이스트를 추천합니다.",
-            "Natural": "<strong>🌿 내추럴 체형:</strong> 뼈대가 발달하고 중성적인 분위기가 특징입니다. 자연스러운 오버사이즈 핏이 잘 어울립니다."
+            "Straight": "<strong>💎 스트레이트 체형:</strong> 전체적으로 입체감 있는 상체와 근육질 라인이 특징입니다. 심플하고 정갈한 셔츠, 브이넥, 직선적인 핏의 슬랙스가 체형의 장점을 가장 잘 살려줍니다. 장식은 최소화하고 소재감이 탄탄한 옷을 선택해보세요.",
+            "Wave": "<strong>🌸 웨이브 체형:</strong> 상체가 얇고 하체에 곡선이 있는 부드러운 라인이 특징입니다. 화려한 프릴이나 장식이 있는 상의, 하이웨이스트 스커트/팬츠로 볼륨감을 높이는 스타일링이 잘 어울립니다. 부드럽고 가벼운 소재를 활용해보세요.",
+            "Natural": "<strong>🌿 내추럴 체형:</strong> 어깨나 골반 등 뼈대가 발달하여 중성적이고 시크한 분위기가 특징입니다. 자연스러운 오버사이즈 핏, 리넨이나 코듀로이 같은 텍스처가 살아있는 소재, 레이어드 스타일링이 베스트입니다. 편안하고 멋스러운 룩을 시도해보세요."
         };
-        document.getElementById('descriptionBox').innerHTML = descriptions[className] || "분석 중입니다...";
+        document.getElementById('descriptionBox').innerHTML = descriptions[className] || "분석 완료!";
     }
 
     function toggleTheme() {
